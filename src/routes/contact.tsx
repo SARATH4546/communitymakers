@@ -15,7 +15,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { saveInquiry } from "@/lib/inquiries";
 import { faqs, sectionImages } from "@/data/content";
 
 export const Route = createFileRoute("/contact")({
@@ -33,31 +32,32 @@ export const Route = createFileRoute("/contact")({
 function ContactPage() {
   const { t, tr } = useLang();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => window.scrollTo(0, 0), []);
 
-  const validate = () => {
-    const e: Record<string, string> = {};
-    if (form.name.trim().length < 2) e.name = "!";
-    if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) e.email = "!";
-    if (form.phone.trim().replace(/\D/g, "").length < 8) e.phone = "!";
-    if (form.message.trim().length < 5) e.message = "!";
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
-
-  const submit = (ev: React.FormEvent) => {
+  const handleSubmit = async (ev: React.FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
-    if (!validate()) return;
     setLoading(true);
-    setTimeout(() => {
-      saveInquiry({ ...form, subject: "General Contact" });
+    const formData = new FormData(ev.currentTarget);
+    try {
+      const res = await fetch("https://formspree.io/f/xojzknae", {
+        method: "POST",
+        body: formData,
+        headers: { Accept: "application/json" },
+      });
+      if (res.ok) {
+        setSubmitted(true);
+        toast.success(t("contactReceived"));
+        (ev.target as HTMLFormElement).reset();
+      } else {
+        toast.error("Something went wrong. Please try again.");
+      }
+    } catch {
+      toast.error("Network error. Please check your connection.");
+    } finally {
       setLoading(false);
-      toast.success(t("contactReceived"));
-      setForm({ name: "", email: "", phone: "", message: "" });
-    }, 900);
+    }
   };
 
   return (
@@ -78,26 +78,33 @@ function ContactPage() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          onSubmit={submit}
+          action="https://formspree.io/f/xojzknae"
+          method="POST"
+          onSubmit={handleSubmit}
           className="grid gap-4 rounded-3xl border border-border bg-card p-6 shadow-soft"
         >
+          {submitted && (
+            <div className="rounded-xl bg-green-50 border border-green-200 p-4 text-center text-sm text-green-700 dark:bg-green-950/30 dark:border-green-800 dark:text-green-400">
+              ✅ {t("contactReceived")}
+            </div>
+          )}
           <div className="grid gap-1.5">
             <Label htmlFor="name">{t("yourName")}</Label>
-            <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={errors.name ? "border-destructive" : ""} />
+            <Input id="name" name="name" required minLength={2} />
           </div>
           <div className="grid gap-1.5 sm:grid-cols-2 sm:gap-4">
             <div className="grid gap-1.5">
               <Label htmlFor="email">{t("email")}</Label>
-              <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={errors.email ? "border-destructive" : ""} />
+              <Input id="email" name="email" type="email" required />
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="phone">{t("phone")}</Label>
-              <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={errors.phone ? "border-destructive" : ""} />
+              <Input id="phone" name="phone" type="tel" />
             </div>
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="message">{t("message")}</Label>
-            <Textarea id="message" rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className={errors.message ? "border-destructive" : ""} />
+            <Textarea id="message" name="message" rows={5} required minLength={5} />
           </div>
           <Button type="submit" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -108,7 +115,7 @@ function ContactPage() {
         <div className="grid gap-6">
           <div className="grid gap-3">
             <ContactRow icon={<Mail className="h-5 w-5" />} label={t("email")} value="hello@makersmarket.org" />
-            <ContactRow icon={<Phone className="h-5 w-5" />} label={t("phone")} value="+91 98765 43210" />
+            <ContactRow icon={<Phone className="h-5 w-5" />} label={t("phone")} value="+91 74164 03722" />
             <ContactRow icon={<MapPin className="h-5 w-5" />} label={t("contactInfo")} value="Andhra Pradesh & Telangana" />
           </div>
 

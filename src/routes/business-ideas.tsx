@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { Wallet, Gauge, TrendingUp, ArrowRight } from "lucide-react";
-import { createFileRoute } from "@tanstack/react-router";
+import { Wallet, Gauge, TrendingUp, ArrowRight, ShoppingBag } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useLang } from "@/i18n/LanguageContext";
 import { SectionHeading } from "@/components/SectionHeading";
 import { BusinessIdeaModal } from "@/components/BusinessIdeaModal";
@@ -22,6 +22,7 @@ export const Route = createFileRoute("/business-ideas")({
 
 function BusinessIdeasPage() {
   const { t, tr } = useLang();
+  const navigate = useNavigate();
   const [active, setActive] = useState<BusinessIdea | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -30,6 +31,29 @@ function BusinessIdeasPage() {
   const openIdea = (idea: BusinessIdea) => {
     setActive(idea);
     setOpen(true);
+  };
+
+  /** Maps a business idea ID to the closest marketplace category filter */
+  const ideaCategoryMap: Record<string, string> = {
+    candles: "crafts",
+    pickles: "foods",
+    tailoring: "clothing",
+    jewelry: "jewelry",
+    gifts: "gifts",
+    nursery: "decor",
+    crochet: "crafts",
+    paintings: "paintings",
+    decor: "decor",
+    bookmarks: "crafts",
+    "friendship-bands": "jewelry",
+    "paper-flowers": "decor",
+    "origami-decor": "decor",
+    "hair-bows": "clothing",
+    scrunchies: "clothing",
+    "beaded-bracelets": "jewelry",
+    "beaded-rings": "jewelry",
+    "quote-cards": "crafts",
+    "photo-collage": "gifts",
   };
 
   return (
@@ -63,6 +87,20 @@ function BusinessIdeasPage() {
               <Button className="mt-5 w-full" variant="outline" onClick={() => openIdea(idea)}>
                 {t("learnMore")} <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
+              {ideaCategoryMap[idea.id] && (
+                <Button
+                  className="mt-2 w-full"
+                  variant="secondary"
+                  onClick={() =>
+                    navigate({
+                      to: "/marketplace",
+                      search: { cat: ideaCategoryMap[idea.id] } as never,
+                    })
+                  }
+                >
+                  <ShoppingBag className="mr-1 h-4 w-4" /> Shop Products
+                </Button>
+              )}
             </div>
           </motion.div>
         ))}

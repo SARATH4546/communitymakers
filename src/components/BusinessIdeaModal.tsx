@@ -5,6 +5,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "@tanstack/react-router";
 import {
   Wallet,
   Gauge,
@@ -13,6 +15,7 @@ import {
   AlertTriangle,
   Lightbulb,
   Package,
+  ShoppingBag,
 } from "lucide-react";
 import { useLang } from "@/i18n/LanguageContext";
 import type { BusinessIdea } from "@/data/content";
@@ -27,7 +30,31 @@ export function BusinessIdeaModal({
   onOpenChange: (v: boolean) => void;
 }) {
   const { t, tr } = useLang();
+  const navigate = useNavigate();
   if (!idea) return null;
+
+  const ideaCategoryMap: Record<string, string> = {
+    candles: "crafts",
+    pickles: "foods",
+    tailoring: "clothing",
+    jewelry: "jewelry",
+    gifts: "gifts",
+    nursery: "decor",
+    crochet: "crafts",
+    paintings: "paintings",
+    decor: "decor",
+    bookmarks: "crafts",
+    "friendship-bands": "jewelry",
+    "paper-flowers": "decor",
+    "origami-decor": "decor",
+    "hair-bows": "clothing",
+    scrunchies: "clothing",
+    "beaded-bracelets": "jewelry",
+    "beaded-rings": "jewelry",
+    "quote-cards": "crafts",
+    "photo-collage": "gifts",
+  };
+  const marketCat = ideaCategoryMap[idea.id];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -113,6 +140,18 @@ export function BusinessIdeaModal({
             </ul>
           </Section>
         </div>
+
+        {marketCat && (
+          <Button
+            className="mt-4 w-full"
+            onClick={() => {
+              onOpenChange(false);
+              navigate({ to: "/marketplace", search: { cat: marketCat } as never });
+            }}
+          >
+            <ShoppingBag className="mr-2 h-4 w-4" /> Shop Related Products
+          </Button>
+        )}
       </DialogContent>
     </Dialog>
   );
